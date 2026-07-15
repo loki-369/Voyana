@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  password          String
+  name              String
+  role              String             @default("TRAVELER") // TRAVELER, GUIDE, VENDOR, DRIVER, ADMIN, SUPERADMIN
+  phone             String?
+  avatarUrl         String?
+  verified          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  // Relations
+  trips             Trip[]
+  guideBookings     GuideBooking[]     @relation("TravelerBookings")
+  guideProfile      GuideProfile?
+  vendorProfile     VendorProfile?
+  driverProfile     DriverProfile?
+  rentalOrders      RentalOrder[]
+  taxiBookings      TaxiBooking[]      @relation("TravelerTaxiBookings")
+  journalEntries    JournalEntry[]
+  notifications     Notification[]
+  reviews           Review[]           @relation("Reviewer")
+  messagesSent      Message[]          @relation("Sender")
+  messagesReceived  Message[]          @relation("Receiver")
+  emergencyContacts EmergencyContact[]
+  savedPlaces       SavedPlace[]
+  aiConversations   AIConversation[]
+  payments          Payment[]
+  auditLogs         AuditLog[]
+}
+
+model GuideProfile {
+  id             String         @id @default(uuid())
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  languages      String         // comma-separated
+  experience     Int
+  specialization String
+  pricePerDay    Float
+  availability   String         @default("AVAILABLE") // AVAILABLE, BUSY, UNAVAILABLE
+  ratings        Float          @default(5.0)
+  verifiedBadge  Boolean        @default(false)
+  location       String
+  bio            String?
+  certificates   String?        // comma-separated URLs
+  
+  bookings       GuideBooking[] @relation("GuideBookings")
+  reviews        Review[]       @relation("GuideReviews")
+}
+
+model GuideBooking {
+  id         String       @id @default(uuid())
+  guideId    String
+  guide      GuideProfile @relation("GuideBookings", fields: [guideId], references: [id], onDelete: Cascade)
+  travelerId String
+  traveler   User         @relation("TravelerBookings", fields: [travelerId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Float
+  status     String       @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  createdAt  DateTime     @default(now())
+}
+
+model VendorProfile {
+  id        String       @id @default(uuid())
+  userId    String       @unique
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName String
+  location  String
+  rating    Float        @default(5.0)
+  
+  items     RentalItem[]
+  orders    RentalOrder[] @relation("VendorOrders")
+}
+
+model RentalItem {
+  id             String            @id @default(uuid())
+  vendorId       String
+  vendor         VendorProfile     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  name           String
+  category       String            // Winter Clothes, Camping, DSLR, GoPro, Trekking, etc.
+  pricePerDay    Float
+  imageUrl       String?
+  description    String?
+  availableCount Int               @default(1)
+  orderItems     RentalOrderItem[]
+  reviews        Review[]          @relation("RentalReviews")
+}
+
+model RentalOrder {
+  id         String            @id @default(uuid())
+  vendorId   String
+  vendor     VendorProfile     @relation("VendorOrders", fields: [vendorId], references: [id], onDelete: Cascade)
+  travelerId String
+  traveler   User              @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Float
+  status     String            @default("PENDING") // PENDING, CONFIRMED, SHIPPED, DELIVERED, RETURNED, CANCELLED
+  items      RentalOrderItem[]
+  createdAt  DateTime          @default(now())
+}
+
+model RentalOrderItem {
+  id       String     @id @default(uuid())
+  orderId  String
+  order    RentalOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId   String
+  item     RentalItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity Int        @default(1)
+}
+
+model DriverProfile {
+  id            String        @id @default(uuid())
+  userId        String        @unique
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType   String        // Car, SUV, Bike, Tempo
+  vehicleNumber String
+  vehicleModel  String
+  rating        Float         @default(5.0)
+  status        String        @default("OFFLINE") // OFFLINE, AVAILABLE, ON_TRIP
+  latitude      Float?
+  longitude     Float?
+  bookings      TaxiBooking[] @relation("DriverTaxiBookings")
+}
+
+model TaxiBooking {
+  id             String         @id @default(uuid())
+  travelerId     String
+  traveler       User           @relation("TravelerTaxiBookings", fields: [travelerId], references: [id], onDelete: Cascade)
+  driverId       String?
+  driver         DriverProfile? @relation("DriverTaxiBookings", fields: [driverId], references: [id], onDelete: Cascade)
+  pickupLocation String
+  dropLocation   String
+  pickupLat      Float?
+  pickupLng      Float?
+  dropLat        Float?
+  dropLng        Float?
+  estimatedFare  Float
+  otp            String
+  status         String         @default("PENDING") // PENDING, ACCEPTED, ON_THE_WAY, STARTED, COMPLETED, CANCELLED
+  createdAt      DateTime       @default(now())
+}
+
+model Trip {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination    String
+  startDate      DateTime
+  endDate        DateTime
+  budget         Float
+  companions     String?           // comma-separated
+  transportation String?
+  accommodation  String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  
+  destinations   DestinationLink[]
+  itineraries    ItineraryDay[]
+  expenses       Expense[]
+  checklists     ChecklistItem[]
+}
+
+model DestinationLink {
+  id               String    @id @default(uuid())
+  tripId           String
+  trip             Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name             String
+  visitedDate      DateTime?
+  status           String    @default("UPCOMING") // COMPLETED, CURRENT, UPCOMING
+  weather          String?
+  distanceTraveled Float?
+  gpsCoordinates   String?   // "lat,lng"
+  notes            String?
+  photos           String?   // comma-separated URLs
+}
+
+model ItineraryDay {
+  id         String    @id @default(uuid())
+  tripId     String
+  trip       Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  dayNumber  Int
+  date       DateTime?
+  activities String    // Description text
+  expenses   Float     @default(0.0)
+}
+
+model ChecklistItem {
+  id        String  @id @default(uuid())
+  tripId    String
+  trip      Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  task      String
+  completed Boolean @default(false)
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  amount      Float
+  category    String   // Food, Hotel, Fuel, Shopping, Taxi, Guide, Rental, Entertainment
+  description String?
+  date        DateTime @default(now())
+}
+
+model JournalEntry {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  content      String
+  mood         String?  // Happy, Excited, Tired, Neutral, Adventurous
+  location     String?
+  weather      String?
+  date         DateTime @default(now())
+  photos       String?  // comma-separated URLs
+  voiceNoteUrl String?
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String   // TRIP_ALERT, WEATHER_ALERT, TAXI_UPDATE, MESSAGE, EMERGENCY
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id           String      @id @default(uuid())
+  reviewerId   String
+  reviewer     User        @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  guideId      String?
+  guide        GuideProfile? @relation("GuideReviews", fields: [guideId], references: [id], onDelete: Cascade)
+  rentalItemId String?
+  rentalItem   RentalItem? @relation("RentalReviews", fields: [rentalItemId], references: [id], onDelete: Cascade)
+  rating       Int
+  comment      String
+  createdAt    DateTime    @default(now())
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model EmergencyContact {
+  id           String @id @default(uuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  relationship String
+  phone        String
+}
+
+model SavedPlace {
+  id        String  @id @default(uuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  address   String?
+  latitude  Float
+  longitude Float
+  category  String? // Restaurant, Attraction, Hotel, etc.
+}
+
+model WeatherCache {
+  id         String   @id @default(uuid())
+  location   String   @unique
+  temp       Float
+  condition  String
+  humidity   Int
+  windSpeed  Float
+  forecast   String   // JSON string
+  cachedAt   DateTime @default(now())
+}
+
+model AIConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  messages  String   // JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String   @default("INR")
+  status        String   // SUCCESS, FAILED, PENDING
+  gateway       String   // STRIPE, RAZORPAY, UPI
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
