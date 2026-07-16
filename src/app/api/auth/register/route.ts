@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, generateToken } from "@/lib/auth";
+import { hashPassword, generateToken, verifyToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -116,5 +116,127 @@ export async function POST(request: Request) {
       { error: error.message || "Internal server error" },
       { status: 500 }
     );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    let token = "";
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const match = cookieHeader.match(/token=([^;]+)/);
+      if (match) token = match[1];
+    }
+    if (!token) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { role } = body;
+
+    if (!role) {
+      return NextResponse.json({ error: "Role is required" }, { status: 400 });
+    }
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const u = await tx.user.update({
+        where: { id: payload.id },
+        data: { role },
+      });
+
+      if (role === "GUIDE") {
+        const existing = await tx.guideProfile.findUnique({ where: { userId: u.id } });
+        if (!existing) {
+          await tx.guideProfile.create({
+            data: {
+              userId: u.id,
+              languages: "English, Hindi, Kashmiri",
+              experience: 5,
+              specialization: "Cultural tours & Trekking",
+              pricePerDay: 2000,
+              location: "Srinagar, J&K",
+              bio: "I am a local travel guide.",
+              availability: "AVAILABLE",
+              verifiedBadge: true,
+            },
+          });
+        }
+      } else if (role === "VENDOR") {
+        const existing = await tx.vendorProfile.findUnique({ where: { userId: u.id } });
+        if (!existing) {
+          await tx.vendorProfile.create({
+            data: {
+              userId: u.id,
+              storeName: `${u.name}'s Rental Hub`,
+              location: "Gulmarg Gondola Base",
+            },
+          });
+        }
+      } else if (role === "DRIVER") {
+        const existing = await tx.driverProfile.findUnique({ where: { userId: u.id } });
+        if (!existing) {
+          await tx.driverProfile.create({
+            data: {
+              userId: u.id,
+              vehicleType: "SUV",
+              vehicleNumber: "JK-01-A-1234",
+              vehicleModel: "Mahindra Scorpio 4x4",
+              status: "AVAILABLE",
+              latitude: 34.0837,
+              longitude: 74.7973,
+            },
+          });
+        }
+      }
+
+      return u;
+    });
+
+    const fullUser = await prisma.user.findUnique({
+      where: { id: updatedUser.id },
+      include: {
+        guideProfile: true,
+        vendorProfile: true,
+        driverProfile: true,
+      },
+    });
+
+    const newToken = generateToken({
+      id: fullUser!.id,
+      email: fullUser!.email,
+      role: fullUser!.role,
+      name: fullUser!.name,
+    });
+
+    const { password: _, ...safeUser } = fullUser!;
+
+    const response = NextResponse.json({
+      user: safeUser,
+      token: newToken,
+    });
+
+    response.cookies.set("token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    return response;
+  } catch (error: any) {
+    console.error("Role switch PUT error:", error);
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

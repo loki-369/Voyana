@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Compass, DollarSign, CalendarCheck, ShieldAlert, Award, FileSpreadsheet, FileClock, CheckCircle } from "lucide-react";
+import { Users, Compass, DollarSign, CalendarCheck, Award, FileSpreadsheet, FileClock, CheckCircle } from "lucide-react";
 
 interface AdminProps {
   user: any;
   isOnline: boolean;
 }
 
-export default function AdminDashboard({ user, isOnline }: AdminProps) {
+export default function AdminDashboard({ isOnline }: AdminProps) {
   const [stats, setStats] = useState<any>({
     users: { total: 0, traveler: 0, guide: 0, vendor: 0, driver: 0 },
     trips: 0,
@@ -28,8 +28,8 @@ export default function AdminDashboard({ user, isOnline }: AdminProps) {
   const fetchAdminStats = async () => {
     try {
       const res = await fetch("/api/dashboard/admin");
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         setStats(data.stats);
         setPendingGuides(data.pendingGuides || []);
         setAuditLogs(data.auditLogs || []);
@@ -68,7 +68,6 @@ export default function AdminDashboard({ user, isOnline }: AdminProps) {
   const handleVerifyGuide = async (guideId: string) => {
     if (isOnline) {
       try {
-        // Mocking verification put request
         const res = await fetch("/api/dashboard/admin", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -87,32 +86,32 @@ export default function AdminDashboard({ user, isOnline }: AdminProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin"></div>
+      <div className="flex items-center justify-center py-24">
+        <div className="w-6 h-6 rounded-full border-2 border-neutral-200 border-t-neutral-950 animate-spin"></div>
       </div>
     );
   }
 
   const statCards = [
-    { label: "Total Users", value: stats.users.total, desc: `${stats.users.traveler} travelers • ${stats.users.guide} guides`, icon: Users, color: "text-blue-600 bg-blue-50 border-blue-100" },
-    { label: "Active Trips", value: stats.trips, desc: "Total plans created", icon: Compass, color: "text-sky-600 bg-sky-50 border-sky-100" },
-    { label: "Commision Revenue", value: `₹${stats.revenue.total}`, desc: "10% guide, 15% rentals commision", icon: DollarSign, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-    { label: "Guide Bookings", value: stats.bookings, desc: `${stats.orders} rentals • ${stats.rides} cab orders`, icon: CalendarCheck, color: "text-purple-600 bg-purple-50 border-purple-100" },
+    { label: "Total Users", value: stats.users.total, desc: `${stats.users.traveler} travelers • ${stats.users.guide} guides`, icon: Users },
+    { label: "Active Trips", value: stats.trips, desc: "Total route plans", icon: Compass },
+    { label: "Commission", value: `₹${stats.revenue.total}`, desc: "10% guide, 15% rentals", icon: DollarSign },
+    { label: "Bookings", value: stats.bookings, desc: `${stats.orders} rentals • ${stats.rides} cabs`, icon: CalendarCheck },
   ];
 
   return (
-    <div className="space-y-6 max-h-[85vh] overflow-y-auto pb-6">
+    <div className="space-y-6 max-h-[85vh] overflow-y-auto pb-12 font-sans">
       {/* Overview Stat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs flex items-center gap-4">
-            <div className={`p-3 rounded-xl border ${card.color} shrink-0`}>
-              <card.icon className="w-5 h-5" />
+          <div key={card.label} className="premium-card p-5 rounded-xl flex items-center gap-4">
+            <div className="p-3 bg-[#faf9f6] border border-neutral-200/50 rounded-lg shrink-0 text-neutral-600 shadow-sm">
+              <card.icon className="w-5 h-5 text-[#0f766e]" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{card.label}</span>
-              <h4 className="text-xl font-bold text-slate-800 mt-0.5">{card.value}</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{card.desc}</p>
+              <span className="text-[9px] text-neutral-450 font-bold uppercase tracking-wider block">{card.label}</span>
+              <h4 className="text-xl font-light tracking-tight text-neutral-800 mt-0.5">{card.value}</h4>
+              <p className="text-[10px] text-neutral-400 font-light mt-0.5">{card.desc}</p>
             </div>
           </div>
         ))}
@@ -120,38 +119,38 @@ export default function AdminDashboard({ user, isOnline }: AdminProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Verification Center */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-100 flex flex-col min-h-[300px]">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <Award className="w-4.5 h-4.5 text-sky-500" />
+        <div className="lg:col-span-2 bg-white p-6 border border-neutral-200/50 rounded-xl flex flex-col min-h-[300px] shadow-sm">
+          <h3 className="text-xs uppercase font-bold tracking-wider text-neutral-450 flex items-center gap-2 mb-4">
+            <Award className="w-4 h-4 text-amber-600" />
             Guide & Vendor Verifications
           </h3>
 
           <div className="space-y-3 flex-1 overflow-y-auto pr-1">
             {pendingGuides.length === 0 ? (
-              <div className="text-center py-10 bg-slate-50 border border-slate-150 rounded-xl">
-                <CheckCircle className="w-10 h-10 text-slate-300 mx-auto" />
-                <p className="text-xs text-slate-400 mt-2 font-medium">All guides and vendors are verified!</p>
+              <div className="text-center py-12 bg-[#faf9f6]/40 border border-neutral-200/50 rounded-xl shadow-inner flex flex-col items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-[#0f766e] mb-2 animate-pulse" />
+                <p className="text-xs text-neutral-450 font-semibold">All registrations are verified!</p>
               </div>
             ) : (
               pendingGuides.map((guide) => (
-                <div key={guide.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between gap-4">
+                <div key={guide.id} className="p-4 border border-neutral-200/60 rounded-xl bg-[#faf9f6]/40 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img src={guide.user.avatarUrl} alt="guide" className="w-11 h-11 rounded-full object-cover border border-slate-200" />
+                    <img src={guide.user.avatarUrl} alt="guide" className="w-10 h-10 rounded-full object-cover border border-neutral-200 shadow-sm" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-700">{guide.user.name}</h4>
-                      <p className="text-[10px] text-slate-400 font-semibold">{guide.user.email} • Exp: {guide.experience} yrs</p>
-                      <p className="text-[10px] text-slate-500 mt-1 font-medium bg-white px-2 py-0.5 rounded border border-slate-200/50 w-fit">
-                        Spec: {guide.specialization}
+                      <h4 className="text-xs font-bold text-neutral-800">{guide.user.name}</h4>
+                      <p className="text-[10px] text-neutral-400 font-light">{guide.user.email} • Exp: {guide.experience} yrs</p>
+                      <p className="text-[9px] mt-1.5 bg-white px-2 py-0.5 rounded border border-neutral-200 text-neutral-550 w-fit font-bold uppercase tracking-wider">
+                        {guide.specialization}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div>
                     <button
                       onClick={() => handleVerifyGuide(guide.id)}
-                      className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-neutral-950 hover:bg-neutral-850 text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer shadow-sm"
                     >
-                      Approve & Badge
+                      Approve Guide
                     </button>
                   </div>
                 </div>
@@ -161,27 +160,27 @@ export default function AdminDashboard({ user, isOnline }: AdminProps) {
         </div>
 
         {/* Audit Logs */}
-        <div className="lg:col-span-1 bg-white p-5 rounded-2xl border border-slate-100 flex flex-col h-full min-h-[300px]">
+        <div className="lg:col-span-1 bg-white p-6 border border-neutral-200/50 rounded-xl flex flex-col h-full min-h-[300px] shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <FileClock className="w-4.5 h-4.5 text-slate-500" />
+            <h3 className="text-xs uppercase font-bold tracking-wider text-neutral-450 flex items-center gap-2">
+              <FileClock className="w-4 h-4 text-neutral-500" />
               Security Audit Logs
             </h3>
-            <button className="text-[10px] text-sky-600 font-bold hover:underline flex items-center gap-0.5">
-              Export PDF
+            <button className="text-[9px] uppercase tracking-wider text-neutral-850 font-bold hover:underline flex items-center gap-1 cursor-pointer">
+              Logs
               <FileSpreadsheet className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+          <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
             {auditLogs.map((log, index) => (
-              <div key={index} className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 hover:bg-slate-100/50 transition-colors">
-                <div className="flex justify-between items-center text-[9px]">
-                  <span className="font-bold text-slate-500">{log.action}</span>
-                  <span className="text-slate-400 font-semibold">{log.ipAddress}</span>
+              <div key={index} className="p-3 bg-[#faf9f6]/40 border border-neutral-200/40 rounded-xl space-y-1 hover:border-neutral-400 transition-all shadow-inner">
+                <div className="flex justify-between items-center text-[9px] font-semibold">
+                  <span className="text-[#0f766e]">{log.action}</span>
+                  <span className="text-neutral-400">{log.ipAddress}</span>
                 </div>
-                <p className="text-[10px] text-slate-600 font-semibold leading-snug">{log.details}</p>
-                <span className="text-[8px] text-slate-400 block pt-1">
+                <p className="text-[10px] text-neutral-600 leading-snug font-light">{log.details}</p>
+                <span className="text-[8px] text-neutral-400 block pt-0.5 font-light">
                   {new Date(log.createdAt).toLocaleTimeString()}
                 </span>
               </div>

@@ -132,3 +132,66 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const isAdmin = await verifyAdminRole(request);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized. Admin role required." }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { guideId, verify } = body;
+
+    if (!guideId) {
+      return NextResponse.json({ error: "Guide ID is required" }, { status: 400 });
+    }
+
+    const guide = await prisma.guideProfile.findUnique({
+      where: { id: guideId },
+      include: { user: true },
+    });
+
+    if (!guide) {
+      return NextResponse.json({ error: "Guide profile not found" }, { status: 404 });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const uProfile = await tx.guideProfile.update({
+        where: { id: guideId },
+        data: { verifiedBadge: !!verify },
+      });
+
+      await tx.user.update({
+        where: { id: guide.userId },
+        data: { verified: !!verify },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action: "GUIDE_VERIFIED",
+          details: `Guide ${guide.user.name} (${guide.user.email}) verification set to ${!!verify}`,
+          userId: guide.userId,
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: guide.userId,
+          title: verify ? "Verification Approved! 🏆" : "Verification Status Updated",
+          body: verify
+            ? "Congratulations! Your profile has been reviewed and verified by administrators. The verified badge is now active on your profile."
+            : "Your verification status has been updated.",
+          type: "TRIP_ALERT",
+        },
+      });
+
+      return uProfile;
+    });
+
+    return NextResponse.json({ guide: updated }, { status: 200 });
+  } catch (error: any) {
+    console.error("PUT admin guide verify error:", error);
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
+}

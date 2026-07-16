@@ -297,22 +297,22 @@ export default function Home() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 text-slate-800">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#faf9f6] text-[#171717] font-sans antialiased">
       {/* Dynamic Toast / Sync alert banner */}
       {syncToast && (
-        <div className="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl border border-white/10 text-xs font-semibold shadow-lg z-[999] flex items-center gap-2">
-          {syncing ? <Wifi className="w-4 h-4 text-sky-400 animate-pulse" /> : <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+        <div className="fixed bottom-6 right-6 bg-[#171717]/95 backdrop-blur border border-white/10 text-white px-4 py-3 text-xs font-semibold shadow-xl rounded-xl z-[999] flex items-center gap-2">
+          {syncing ? <Wifi className="w-4 h-4 text-emerald-400 animate-pulse" /> : <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
           {syncToast}
         </div>
       )}
 
-      {/* Floating Dev Switcher (grants instant toggle between dashboards) */}
-      <div className="fixed bottom-4 left-4 z-50 bg-white/95 border border-slate-200 p-2.5 rounded-xl shadow-lg flex items-center gap-2 text-[10px] font-semibold">
-        <span className="text-slate-400">Eval Role:</span>
+      {/* Floating Dev Switcher */}
+      <div className="fixed bottom-6 left-6 z-50 premium-glass p-2 px-3.5 rounded-full shadow-lg flex items-center gap-2 text-[10px] font-bold text-neutral-700 border border-neutral-200/50">
+        <span className="uppercase tracking-wider text-neutral-400 font-bold">Sandbox:</span>
         <select
           value={user.role}
           onChange={(e) => handleDevRoleSwitch(e.target.value)}
-          className="bg-slate-50 border border-slate-250 p-1 rounded font-bold outline-none cursor-pointer"
+          className="bg-transparent border-none py-0.5 pr-2 font-bold outline-none cursor-pointer text-neutral-900"
         >
           <option value="TRAVELER">Traveler</option>
           <option value="GUIDE">Tour Guide</option>
@@ -324,27 +324,27 @@ export default function Home() {
 
       {/* SIDEBAR FOR TRAVELER / ADMIN */}
       {user.role === "TRAVELER" || user.role === "ADMIN" || user.role === "SUPERADMIN" ? (
-        <aside className="md:w-64 bg-slate-900 text-slate-400 flex flex-col justify-between border-r border-slate-850 p-5 shrink-0 z-20">
+        <aside className="hidden md:flex md:w-64 bg-neutral-950 text-neutral-400 flex-col justify-between border-r border-neutral-900 p-6 shrink-0 z-20">
           <div className="space-y-8">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🧭</span>
-                <span className="font-extrabold text-white text-sm tracking-widest">VOYANA</span>
+                <Compass className="w-5 h-5 text-emerald-500" />
+                <span className="font-bold text-white text-[11px] tracking-[0.3em] font-sans">VOYANA</span>
               </div>
 
               {/* Online/Offline status */}
               <div className="flex items-center">
                 {isOnline ? (
-                  <span title="Online"><Wifi className="w-4 h-4 text-emerald-500" /></span>
+                  <span title="Online"><Wifi className="w-3.5 h-3.5 text-neutral-500" /></span>
                 ) : (
-                  <span title="Offline mode active"><WifiOff className="w-4 h-4 text-rose-500 animate-pulse" /></span>
+                  <span title="Offline mode active" className="p-1 rounded bg-red-950/40"><WifiOff className="w-3.5 h-3.5 text-red-400 animate-pulse" /></span>
                 )}
               </div>
             </div>
 
             {/* Nav List */}
-            <nav className="space-y-1">
+            <nav className="space-y-1 pt-2">
               {navTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.name;
@@ -352,13 +352,13 @@ export default function Home() {
                   <button
                     key={tab.name}
                     onClick={() => setActiveTab(tab.name)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       isActive
-                        ? "bg-sky-600 text-white shadow-xs"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                        ? "bg-neutral-900 text-white border-l-2 border-emerald-500"
+                        : "text-neutral-400 hover:bg-neutral-900/50 hover:text-white"
                     }`}
                   >
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
                     {tab.name}
                   </button>
                 );
@@ -367,12 +367,12 @@ export default function Home() {
           </div>
 
           {/* User profile metadata */}
-          <div className="border-t border-white/5 pt-5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img src={user.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />
+          <div className="border-t border-neutral-900 pt-5 flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src={user.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full border border-amber-500/30 object-cover shadow" />
               <div className="min-w-0">
                 <span className="text-xs font-bold text-white block truncate">{user.name}</span>
-                <span className="text-[9px] uppercase tracking-wider text-slate-500 block">{user.role}</span>
+                <span className="text-[8px] uppercase tracking-widest text-neutral-500 block font-bold">{user.role}</span>
               </div>
             </div>
           </div>
@@ -380,10 +380,10 @@ export default function Home() {
       ) : null}
 
       {/* MAIN CONTAINER */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-screen overflow-y-auto md:overflow-hidden pb-20 md:pb-0">
         {/* Top Header */}
-        <header className="bg-white border-b border-slate-100 py-3.5 px-6 flex justify-between items-center z-10 shrink-0">
-          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+        <header className="bg-white/80 backdrop-blur-md border-b border-neutral-200/50 py-4 px-6 flex justify-between items-center z-10 shrink-0">
+          <h2 className="text-xs font-bold text-neutral-800 uppercase tracking-widest">
             {activeTab}
           </h2>
 
@@ -392,11 +392,11 @@ export default function Home() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-500 relative cursor-pointer"
+                className="p-2 bg-[#faf9f6] hover:bg-neutral-100 border border-neutral-200/50 rounded-lg text-neutral-600 relative cursor-pointer transition-colors"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">
                     {unreadCount}
                   </span>
                 )}
@@ -404,9 +404,9 @@ export default function Home() {
 
               {/* Notification Drawer */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-4 space-y-3">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h4 className="text-xs font-bold text-slate-800">Notifications Inbox</h4>
+                <div className="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-md border border-neutral-200 rounded-xl shadow-xl z-50 p-4 space-y-3">
+                  <div className="flex justify-between items-center border-b border-neutral-100 pb-2">
+                    <h4 className="text-xs font-bold text-neutral-800">Notifications</h4>
                     <button
                       onClick={async () => {
                         try {
@@ -416,19 +416,19 @@ export default function Home() {
                           console.error(err);
                         }
                       }}
-                      className="text-[9px] text-sky-600 font-bold hover:underline"
+                      className="text-[9px] text-neutral-900 font-bold hover:underline cursor-pointer"
                     >
                       Clear All
                     </button>
                   </div>
-                  <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
                     {notifications.length === 0 ? (
-                      <p className="text-[10px] text-slate-400 text-center py-4">No notifications yet.</p>
+                      <p className="text-[10px] text-neutral-450 text-center py-4">No notifications yet.</p>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} className={`p-2.5 rounded-lg border text-[10px] ${n.read ? "bg-slate-50 border-slate-100" : "bg-sky-50/50 border-sky-100"}`}>
-                          <span className="font-bold text-slate-800 block">{n.title}</span>
-                          <span className="text-slate-500 leading-snug block mt-0.5">{n.body}</span>
+                        <div key={n.id} className={`p-3 rounded-lg border text-[10px] ${n.read ? "bg-neutral-50 border-neutral-200/50" : "bg-emerald-50/20 border-emerald-100"}`}>
+                          <span className="font-bold text-neutral-800 block">{n.title}</span>
+                          <span className="text-neutral-500 leading-snug block mt-0.5 font-light">{n.body}</span>
                         </div>
                       ))
                     )}
@@ -439,14 +439,14 @@ export default function Home() {
 
             {/* Offline Indicators for roles without Sidebars */}
             {(user.role === "GUIDE" || user.role === "VENDOR" || user.role === "DRIVER") && (
-              <div className="flex items-center gap-1.5 text-xs font-semibold bg-slate-50 border border-slate-150 px-2.5 py-1 rounded-lg text-slate-600">
+              <div className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-neutral-200/60 px-3 py-1.5 rounded-lg text-neutral-600 shadow-sm">
                 {isOnline ? (
                   <>
-                    <Wifi className="w-3.5 h-3.5 text-emerald-500" /> Connected
+                    <Wifi className="w-3.5 h-3.5 text-emerald-600" /> Connected
                   </>
                 ) : (
                   <>
-                    <WifiOff className="w-3.5 h-3.5 text-rose-500 animate-pulse" /> Offline Mode
+                    <WifiOff className="w-3.5 h-3.5 text-red-500 animate-pulse" /> Offline Mode
                   </>
                 )}
               </div>
@@ -518,6 +518,33 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* MOBILE FLOATING BOTTOM NAV (Visible only on screens below md) */}
+      {(user.role === "TRAVELER" || user.role === "ADMIN" || user.role === "SUPERADMIN") && (
+        <nav className="md:hidden fixed bottom-4 left-4 right-4 z-50 premium-glass border border-neutral-200/50 rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg bg-white/80 backdrop-blur-md">
+          {navTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.name;
+            return (
+              <button
+                key={tab.name}
+                onClick={() => {
+                  setActiveTab(tab.name);
+                  // Scroll to top of main body
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`p-1.5 flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
+                  isActive ? "text-[#0f766e] font-bold" : "text-neutral-450 hover:text-neutral-700"
+                }`}
+                title={tab.name}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-[7px] uppercase tracking-wider scale-90">{tab.name.split(" ")[0]}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

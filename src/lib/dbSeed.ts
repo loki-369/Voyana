@@ -32,7 +32,7 @@ export async function seedDatabase() {
 
   const guideUser = await prisma.user.create({
     data: {
-      email: "guide@voyana.com",
+      email: "zahoor@voyana.com",
       password: passwordHash,
       name: "Zahoor Ahmed",
       role: "GUIDE",
@@ -44,7 +44,7 @@ export async function seedDatabase() {
 
   const vendorUser = await prisma.user.create({
     data: {
-      email: "vendor@voyana.com",
+      email: "bhat@voyana.com",
       password: passwordHash,
       name: "Gulmarg Rentals",
       role: "VENDOR",
@@ -56,7 +56,7 @@ export async function seedDatabase() {
 
   const driverUser = await prisma.user.create({
     data: {
-      email: "driver@voyana.com",
+      email: "manzoor@voyana.com",
       password: passwordHash,
       name: "Manzoor Dar",
       role: "DRIVER",
