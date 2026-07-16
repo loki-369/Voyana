@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    let bookings = [];
+    let bookings: any[] = [];
 
     if (user.role === "GUIDE") {
       const guideProfile = await prisma.guideProfile.findUnique({

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  voyana:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voyana-travel-platform
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./dev.db:/app/dev.db
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - PORT=3000
+      - NODE_ENV=production
+    restart: always

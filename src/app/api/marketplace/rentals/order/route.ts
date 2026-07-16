@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    let orders = [];
+    let orders: any[] = [];
     if (user.role === "VENDOR" && user.vendorProfile) {
       orders = await prisma.rentalOrder.findMany({
         where: { vendorId: user.vendorProfile.id },
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     });
 
     let totalPrice = 0;
-    const orderItemsData = [];
+    const orderItemsData: any[] = [];
 
     for (const itemInput of items) {
       const dbItem = dbItems.find((i) => i.id === itemInput.itemId);
