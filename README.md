@@ -49,6 +49,33 @@ Voyana is a production-quality, modern, full-stack travel companion platform des
 
 ---
 
+## ☁️ Vercel Deployment (Free Cloud Setup)
+
+The app uses **PostgreSQL** (via [Neon](https://neon.tech)) as its cloud database on Vercel. SQLite is not supported in serverless environments.
+
+### Step 1 — Create a Free Neon Database
+1. Go to [https://neon.tech](https://neon.tech) and sign up (free)
+2. Click **New Project** → give it a name (e.g. `voyana`)
+3. Copy the **Connection String** — it looks like:
+   ```
+   postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+   ```
+
+### Step 2 — Add Environment Variables to Vercel
+1. Open your Vercel project → **Settings** → **Environment Variables**
+2. Add the following:
+
+| Variable | Value |
+| :--- | :--- |
+| `DATABASE_URL` | Your Neon connection string from Step 1 |
+| `JWT_SECRET` | Any random secret string (e.g. `voyana-prod-secret-2026`) |
+| `OPENAI_API_KEY` | *(Optional)* Your OpenAI API key for AI assistant |
+
+### Step 3 — Redeploy
+Vercel will automatically run `prisma db push && next build` which creates all database tables in Neon and builds the app.
+
+---
+
 ## 💻 Local Setup Instructions
 
 ### 1. Install Dependencies
