@@ -61,8 +61,16 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Notification ID is required" }, { status: 400 });
     }
 
-    const updated = await prisma.notification.update({
+    // Verify ownership first
+    const existing = await prisma.notification.findFirst({
       where: { id: notificationId, userId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Notification not found" }, { status: 404 });
+    }
+
+    const updated = await prisma.notification.update({
+      where: { id: notificationId },
       data: { read: true },
     });
 

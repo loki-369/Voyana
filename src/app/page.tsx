@@ -13,8 +13,6 @@ import {
   Wifi,
   WifiOff,
   CheckCircle2,
-  ListTodo,
-  LogOut,
 } from "lucide-react";
 
 // Sub Components
@@ -192,11 +190,29 @@ export default function Home() {
   const handleLogout = async () => {
     setUser(null);
     setToken("");
+    setTrip(null);
+    setExpenses([]);
+    setChecklists([]);
+    setJournalEntries([]);
+    setNotifications([]);
     try {
       await fetch("/api/auth/me", { method: "DELETE" });
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // Create a brand-new trip
+  const handleCreateTrip = (newTrip: any) => {
+    setTrip(newTrip);
+    if (newTrip?.checklists) setChecklists(newTrip.checklists);
+    if (newTrip?.expenses) setExpenses(newTrip.expenses);
+    saveLocalData("trip", newTrip);
+  };
+
+  // Manually log an expense
+  const handleAddExpense = (newExpense: any) => {
+    setExpenses((prev) => [newExpense, ...prev]);
   };
 
   // Toggle Checklist items
@@ -469,6 +485,8 @@ export default function Home() {
                   onSelectTab={setActiveTab}
                   onToggleChecklist={handleToggleChecklist}
                   onLogout={handleLogout}
+                  onCreateTrip={handleCreateTrip}
+                  onAddExpense={handleAddExpense}
                 />
               )}
               {activeTab === "Route & Map" && (
