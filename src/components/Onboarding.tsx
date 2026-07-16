@@ -38,8 +38,8 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
     },
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrorMsg("");
     setLoading(true);
 
@@ -67,17 +67,39 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
     }
   };
 
-  const setTestUser = (testEmail: string, testRole: string) => {
+  const handleSandboxLogin = async (testEmail: string, testRole: string) => {
     setEmail(testEmail);
     setPassword("password123");
     setRole(testRole);
     setAuthMode("login");
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: testEmail, password: "password123" }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        onLoginSuccess(data.user, data.token);
+      } else {
+        setErrorMsg(data.error || "Sandbox login failed.");
+      }
+    } catch (err) {
+      console.error("Sandbox login error", err);
+      setErrorMsg("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen bg-[#faf9f6] text-[#171717] font-sans antialiased">
-      {/* LEFT COLUMN: Editorial Presentation */}
-      <div className="lg:col-span-5 bg-[#171717] text-[#eaeaea] p-10 md:p-14 flex flex-col justify-between border-r border-neutral-800 relative overflow-hidden">
+      {/* LEFT COLUMN: Editorial Presentation (Hidden on mobile for sleek centering) */}
+      <div className="hidden lg:flex lg:col-span-5 bg-[#171717] text-[#eaeaea] p-10 md:p-14 flex flex-col justify-between border-r border-neutral-800 relative overflow-hidden">
         {/* Subtle Ambient Glow */}
         <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-emerald-950/20 blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-40 -right-20 w-96 h-96 rounded-full bg-amber-950/20 blur-[100px] pointer-events-none" />
@@ -117,9 +139,11 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
               <button
                 key={idx}
                 onClick={() => setActiveSlide(idx)}
-                className={`h-[1px] transition-all cursor-pointer ${
-                  activeSlide === idx ? "bg-white w-10" : "bg-neutral-700 w-4"
-                }`}
+                className="h-[1.5px] transition-all cursor-pointer bg-neutral-700 w-4 focus:outline-none"
+                style={{
+                  width: activeSlide === idx ? "40px" : "16px",
+                  backgroundColor: activeSlide === idx ? "#10b981" : "#404040",
+                }}
               />
             ))}
           </div>
@@ -134,22 +158,29 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Minimal Form */}
-      <div className="lg:col-span-7 flex flex-col justify-center items-center p-6 md:p-16">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 md:p-10 border border-neutral-200/50 rounded-xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.02)]">
+      {/* RIGHT COLUMN: Minimal Form (Takes 12 columns on mobile, 7 on desktop) */}
+      <div className="col-span-12 lg:col-span-7 flex flex-col justify-center items-center p-6 md:p-16">
+        
+        {/* Mobile Logo Header */}
+        <div className="flex lg:hidden items-center justify-center gap-2 mb-6">
+          <Compass className="w-6 h-6 text-emerald-600 animate-spin" style={{ animationDuration: "12s" }} />
+          <span className="text-xs font-bold tracking-[0.3em] text-neutral-800">VOYANA</span>
+        </div>
+
+        <div className="max-w-md w-full space-y-8 bg-white p-8 md:p-10 border border-neutral-200/50 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.03)]">
           <div className="space-y-2">
-            <h2 className="text-2xl font-light tracking-tight text-neutral-900">
+            <h2 className="text-xl font-light tracking-tight text-neutral-900">
               {authMode === "login" ? "Sign In" : "Create Profile"}
             </h2>
-            <p className="text-xs text-neutral-400 leading-relaxed font-light">
+            <p className="text-xs text-neutral-450 leading-relaxed font-light">
               {authMode === "login"
-                ? "Enter your credentials or choose a pre-configured sandbox tester role below."
-                : "Create an account as a traveler, guide, vendor, or taxi driver."}
+                ? "Enter credentials or select a sandbox profile below to log in instantly."
+                : "Create a travel companion account to begin."}
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-100 text-red-800 text-[11px] rounded-lg">
+            <div className="p-3.5 bg-red-50 border border-red-100 text-red-800 text-[11px] rounded-lg">
               <span className="font-bold">Error:</span> {errorMsg}
             </div>
           )}
@@ -157,32 +188,32 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
           <form onSubmit={handleSubmit} className="space-y-5">
             {authMode === "register" && (
               <div className="space-y-1">
-                <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-450">Full Name</label>
+                <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-400">Full Name</label>
                 <input
                   required
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Alex Mercer"
-                  className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all font-light"
+                  className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all font-light focus:ring-1 focus:ring-amber-500/50"
                 />
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-450">Email Address</label>
+              <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-400">Email Address</label>
               <input
                 required
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="traveler@voyana.com"
-                className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all font-light"
+                className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all font-light focus:ring-1 focus:ring-amber-500/50"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-450">Password</label>
+              <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-400">Password</label>
               <div className="relative">
                 <input
                   required
@@ -190,7 +221,7 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all pr-10 font-light"
+                  className="w-full text-xs p-3 border border-neutral-200 focus:border-neutral-900 outline-none rounded-lg bg-[#fafafa]/50 focus:bg-white transition-all pr-10 font-light focus:ring-1 focus:ring-amber-500/50"
                 />
                 <button
                   type="button"
@@ -204,16 +235,16 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
 
             {authMode === "register" && (
               <div className="space-y-2">
-                <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-450">Platform Role</label>
+                <label className="block text-[9px] uppercase font-bold tracking-wider text-neutral-400">Platform Role</label>
                 <div className="grid grid-cols-4 gap-2">
                   {["TRAVELER", "GUIDE", "VENDOR", "DRIVER"].map((r) => (
                     <button
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`py-2 text-[9px] font-semibold border rounded-lg transition-all cursor-pointer ${
+                      className={`py-2 text-[9px] font-bold border rounded-lg transition-all cursor-pointer ${
                         role === r
-                          ? "bg-neutral-900 border-neutral-900 text-white shadow-sm"
+                          ? "bg-neutral-950 border-neutral-950 text-white shadow-sm"
                           : "bg-white border-neutral-200 text-neutral-500 hover:bg-neutral-50"
                       }`}
                     >
@@ -227,10 +258,10 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#171717] hover:bg-neutral-800 text-white rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+              className="w-full py-3.5 bg-neutral-950 hover:bg-neutral-850 text-white rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
             >
               {loading ? "Authenticating..." : authMode === "login" ? "Sign In" : "Register"}
-              {!loading && <ArrowRight className="w-3.5 h-3.5" />}
+              {!loading && <ArrowRight className="w-3.5 h-3.5 text-amber-500" />}
             </button>
           </form>
 
@@ -241,7 +272,7 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
             </span>
             <button
               onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
-              className="text-[#171717] font-semibold hover:underline cursor-pointer"
+              className="text-neutral-900 font-semibold hover:underline cursor-pointer"
             >
               {authMode === "login" ? "Create Account" : "Log In"}
             </button>
@@ -252,34 +283,39 @@ export default function Onboarding({ onLoginSuccess }: OnboardingProps) {
             <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-[0.2em] block text-center">
               Evaluator Quick Access Sandbox
             </span>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2">
               <button
-                onClick={() => setTestUser("traveler@voyana.com", "TRAVELER")}
-                className="px-3 py-1.5 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-700 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer"
+                onClick={() => handleSandboxLogin("traveler@voyana.com", "TRAVELER")}
+                disabled={loading}
+                className="px-3 py-2 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-750 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                Traveler
+                Traveler Profile
               </button>
               <button
-                onClick={() => setTestUser("zahoor@voyana.com", "GUIDE")}
-                className="px-3 py-1.5 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-700 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer"
+                onClick={() => handleSandboxLogin("zahoor@voyana.com", "GUIDE")}
+                disabled={loading}
+                className="px-3 py-2 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-750 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                Tour Guide
+                Guide Profile
               </button>
               <button
-                onClick={() => setTestUser("bhat@voyana.com", "VENDOR")}
-                className="px-3 py-1.5 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-700 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer"
+                onClick={() => handleSandboxLogin("bhat@voyana.com", "VENDOR")}
+                disabled={loading}
+                className="px-3 py-2 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-750 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                Rental Vendor
+                Vendor Profile
               </button>
               <button
-                onClick={() => setTestUser("manzoor@voyana.com", "DRIVER")}
-                className="px-3 py-1.5 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-700 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer"
+                onClick={() => handleSandboxLogin("manzoor@voyana.com", "DRIVER")}
+                disabled={loading}
+                className="px-3 py-2 bg-[#faf9f6] hover:bg-neutral-100 text-neutral-750 border border-neutral-200/80 rounded-lg text-[9px] font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                Taxi Driver
+                Driver Profile
               </button>
               <button
-                onClick={() => setTestUser("admin@voyana.com", "ADMIN")}
-                className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-[9px] font-semibold transition-all cursor-pointer"
+                onClick={() => handleSandboxLogin("admin@voyana.com", "ADMIN")}
+                disabled={loading}
+                className="col-span-2 sm:col-span-1 px-3 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-[9px] font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
                 Administrator
               </button>
